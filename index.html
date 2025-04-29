@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galleria Immagini</title>
+    <style>
+        /* Stili generali */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        header {
+            background-color: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .tab-button {
+            padding: 10px 20px;
+            background-color: #ddd;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 0 5px;
+            border-radius: 5px 5px 0 0;
+        }
+        .tab-button.active {
+            background-color: #3498db;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Stili per lo slideshow */
+        .slideshow-container {
+            max-width: 1000px;
+            position: relative;
+            margin: auto;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .slide {
+            display: none;
+        }
+        .slide img {
+            width: 100%;
+            height: 500px;
+            object-fit: cover;
+        }
+        .prev, .next {
+            cursor: pointer;
+            position: absolute;
+            top: 50%;
+            width: auto;
+            margin-top: -22px;
+            padding: 16px;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            transition: 0.6s ease;
+            border-radius: 0 3px 3px 0;
+            user-select: none;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .next {
+            right: 0;
+            border-radius: 3px 0 0 3px;
+        }
+        .prev:hover, .next:hover {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+        .slide-caption {
+            color: #f2f2f2;
+            font-size: 15px;
+            padding: 8px 12px;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+            background-color: rgba(0, 0, 0, 0.6);
+        }
+        .dot-container {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .dot {
+            cursor: pointer;
+            height: 15px;
+            width: 15px;
+            margin: 0 5px;
+            background-color: #bbb;
+            border-radius: 50%;
+            display: inline-block;
+            transition: background-color 0.6s ease;
+        }
+        .active-dot, .dot:hover {
+            background-color: #3498db;
+        }
+        .fade {
+            animation-name: fade;
+            animation-duration: 1.5s;
+        }
+        @keyframes fade {
+            from {opacity: .4}
+            to {opacity: 1}
+        }
+
+        /* Stili per il mosaico */
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            grid-gap: 15px;
+        }
+        .gallery-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+        .gallery-item:hover {
+            transform: scale(1.03);
+        }
+        .gallery-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+        }
+        .gallery-caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .gallery-item:hover .gallery-caption {
+            opacity: 1;
+        }
+
+        /* Modal per la visualizzazione a schermo intero */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+        .modal-content {
+            margin: auto;
+            display: block;
+            max-width: 80%;
+            max-height: 80%;
+        }
+        .modal-caption {
+            margin: auto;
+            display: block;
+            width: 80%;
+            text-align: center;
+            color: white;
+            padding: 10px 0;
+        }
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>La Mia Galleria di Immagini</h1>
+    </header>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab-button active" onclick="openTab('slideshow')">Slideshow</button>
+            <button class="tab-button" onclick="openTab('mosaico')">Mosaico</button>
+        </div>
+
+        <!-- Tab Slideshow -->
+        <div id="slideshow" class="tab-content active">
+            <div class="slideshow-container">
+                <!-- Le slide verranno caricate dinamicamente qui -->
+            </div>
+            <div class="dot-container">
+                <!-- I punti di navigazione verranno aggiunti qui -->
+            </div>
+        </div>
+
+        <!-- Tab Mosaico -->
+        <div id="mosaico" class="tab-content">
+            <div class="gallery">
+                <!-- Le immagini del mosaico verranno caricate dinamicamente qui -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal per la visualizzazione a schermo intero -->
+    <div id="imageModal" class="modal">
+        <span class="close">&times;</span>
+        <img class="modal-content" id="modalImg">
+        <div id="modalCaption" class="modal-caption"></div>
+    </div>
+
+    <script>
+        // Configurazione
+        const imagesFolder = 'images/'; // Percorso della cartella immagini
+        const imageExtensions = ['jpg', 'jpeg', 'png', 'gif']; // Estensioni supportate
+        
+        // Elenco delle immagini (in un caso reale, questo potrebbe essere generato dal server o da un file JSON)
+        const images = [
+            { filename: 'image1.jpg', title: 'Immagine 1', description: 'Descrizione dell\'immagine 1' },
+            { filename: 'image2.jpg', title: 'Immagine 2', description: 'Descrizione dell\'immagine 2' },
+            { filename: 'image3.jpg', title: 'Immagine 3', description: 'Descrizione dell\'immagine 3' },
+            { filename: 'image4.jpg', title: 'Immagine 4', description: 'Descrizione dell\'immagine 4' },
+            { filename: 'image5.jpg', title: 'Immagine 5', description: 'Descrizione dell\'immagine 5' },
+            { filename: 'image6.jpg', title: 'Immagine 6', description: 'Descrizione dell\'immagine 6' }
+            // Aggiungi altre immagini secondo necessità
+        ];
+
+        // Inizializzazione
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSlideshow();
+            loadGallery();
+            showSlides(1);
+        });
+
+        // Funzione per caricare lo slideshow
+        function loadSlideshow() {
+            const slideshowContainer = document.querySelector('.slideshow-container');
+            const dotContainer = document.querySelector('.dot-container');
+            
+            slideshowContainer.innerHTML = '';
+            dotContainer.innerHTML = '';
+            
+            images.forEach((image, index) => {
+                // Crea slide
+                const slide = document.createElement('div');
+                slide.className = 'slide fade';
+                
+                const img = document.createElement('img');
+                img.src = imagesFolder + image.filename;
+                img.alt = image.title;
+                
+                const caption = document.createElement('div');
+                caption.className = 'slide-caption';
+                caption.textContent = image.title;
+                
+                slide.appendChild(img);
+                slide.appendChild(caption);
+                slideshowContainer.appendChild(slide);
+                
+                // Crea dot per la navigazione
+                const dot = document.createElement('span');
+                dot.className = 'dot';
+                dot.onclick = function() { currentSlide(index + 1); };
+                dotContainer.appendChild(dot);
+            });
+            
+            // Aggiungi i controlli di navigazione
+            const prev = document.createElement('a');
+            prev.className = 'prev';
+            prev.innerHTML = '&#10094;';
+            prev.onclick = function() { plusSlides(-1); };
+            
+            const next = document.createElement('a');
+            next.className = 'next';
+            next.innerHTML = '&#10095;';
+            next.onclick = function() { plusSlides(1); };
+            
+            slideshowContainer.appendChild(prev);
+            slideshowContainer.appendChild(next);
+        }
+
+        // Funzione per caricare il mosaico
+        function loadGallery() {
+            const gallery = document.querySelector('.gallery');
+            gallery.innerHTML = '';
+            
+            images.forEach(image => {
+                const item = document.createElement('div');
+                item.className = 'gallery-item';
+                
+                const img = document.createElement('img');
+                img.src = imagesFolder + image.filename;
+                img.alt = image.title;
+                img.onclick = function() { openModal(image); };
+                
+                const caption = document.createElement('div');
+                caption.className = 'gallery-caption';
+                caption.textContent = image.title;
+                
+                item.appendChild(img);
+                item.appendChild(caption);
+                gallery.appendChild(item);
+            });
+        }
+
+        // Funzione per la gestione delle tabs
+        function openTab(tabName) {
+            const tabContents = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('active');
+            }
+            
+            const tabButtons = document.getElementsByClassName('tab-button');
+            for (let i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].classList.remove('active');
+            }
+            
+            document.getElementById(tabName).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // Variabili per lo slideshow
+        let slideIndex = 1;
+
+        // Funzioni per lo slideshow
+        function plusSlides(n) {
+            showSlides(slideIndex += n);
+        }
+
+        function currentSlide(n) {
+            showSlides(slideIndex = n);
+        }
+
+        function showSlides(n) {
+            let i;
+            const slides = document.getElementsByClassName('slide');
+            const dots = document.getElementsByClassName('dot');
+            
+            if (n > slides.length) {slideIndex = 1}
+            if (n < 1) {slideIndex = slides.length}
+            
+            for (i = 0; i < slides.length; i++) {
+                slides[i].style.display = 'none';
+            }
+            
+            for (i = 0; i < dots.length; i++) {
+                dots[i].className = dots[i].className.replace(' active-dot', '');
+            }
+            
+            if (slides.length > 0) {
+                slides[slideIndex-1].style.display = 'block';
+                dots[slideIndex-1].className += ' active-dot';
+            }
+        }
+
+        // Funzioni per il modal
+        function openModal(image) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImg');
+            const modalCaption = document.getElementById('modalCaption');
+            
+            modal.style.display = 'block';
+            modalImg.src = imagesFolder + image.filename;
+            modalCaption.innerHTML = `<h3>${image.title}</h3><p>${image.description}</p>`;
+        }
+
+        // Chiudi modal quando clicchi sulla X
+        document.querySelector('.close').onclick = function() {
+            document.getElementById('imageModal').style.display = 'none';
+        }
+
+        // Chiudi modal quando clicchi fuori dall'immagine
+        window.onclick = function(event) {
+            const modal = document.getElementById('imageModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Script per scansionare automaticamente la cartella delle immagini
+        // Nota: Questo funzionerà solo con un server web, non con file:// URL
+        // Per GitHub Pages, è necessario avere un elenco predefinito o generare un file JSON
+        function scanImagesFolder() {
+            // Questo è solo uno pseudocodice, non funzionerà direttamente
+            // In un ambiente reale, utilizzeresti una soluzione lato server o un file JSON
+            fetch(imagesFolder)
+                .then(response => response.text())
+                .then(html => {
+                    // Parser per HTML directory listing
+                    // Estrai i nomi dei file immagine dal listing della directory
+                    // Questo è molto specifico del server e potrebbe non funzionare su GitHub Pages
+                })
+                .catch(error => {
+                    console.error('Errore nel caricamento delle immagini:', error);
+                });
+        }
+    </script>
+</body>
+</html>
