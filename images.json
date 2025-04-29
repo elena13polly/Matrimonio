@@ -1,0 +1,17 @@
+[
+  {
+    "filename": "img1.jpg",
+    "title": "Immagine 1",
+    "description": "Pollo 1"
+  },
+  {
+    "filename": "img2.jpg",
+    "title": "Immagine 2",
+    "description": "Pollo 2"
+  },
+  {
+    "filename": "img3.png",
+    "title": "Immagine 3",
+    "description": "Pollo 3"
+  }
+]
