@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Galleria Immagini</title>
     <style>
         /* Stili generali */
@@ -333,7 +333,7 @@
                 handleGesture();
             });
         });
-    </script>
+        
         // Configurazione
         const imagesFolder = 'images/'; // Percorso della cartella immagini
         const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp']; // Estensioni supportate
@@ -475,7 +475,7 @@
             }
         }
 
-        // Funzioni per il modal
+        // Funzione per aprire il modal
         function openModal(image) {
             const modal = document.getElementById('imageModal');
             const modalImg = document.getElementById('modalImg');
@@ -484,6 +484,16 @@
             modal.style.display = 'block';
             modalImg.src = imagesFolder + image.filename;
             modalCaption.innerHTML = `<h3>${image.title}</h3><p>${image.description}</p>`;
+            
+            // Disabilita lo scroll della pagina quando il modal è aperto
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Funzione per chiudere il modal
+        function closeModal() {
+            document.getElementById('imageModal').style.display = 'none';
+            // Riabilita lo scroll della pagina
+            document.body.style.overflow = 'auto';
         }
 
         // Chiudi modal quando clicchi sulla X
@@ -516,7 +526,7 @@
                 })
                 .catch(error => {
                     console.log('Tentativo con file JSON fallito:', error);
-                        // Metodo 2: Scansione diretta usando il caricamento di immagini
+                    // Metodo 2: Scansione diretta usando il caricamento di immagini
                     scanDirectoryFromPatterns();
                     
                     // Aggiungiamo un messaggio all'utente
@@ -653,7 +663,7 @@
             runChecks();
         }
         
-// Funzione per inizializzare la galleria dopo aver caricato le immagini
+        // Funzione per inizializzare la galleria dopo aver caricato le immagini
         function initializeGallery() {
             // Aggiungere un messaggio di caricamento completato
             const message = document.createElement('div');
