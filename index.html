@@ -238,24 +238,22 @@
     <script>
         // Configurazione
         const imagesFolder = 'images/'; // Percorso della cartella immagini
-        const imageExtensions = ['jpg', 'jpeg', 'png', 'gif']; // Estensioni supportate
+        const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp']; // Estensioni supportate
         
-        // Elenco delle immagini (in un caso reale, questo potrebbe essere generato dal server o da un file JSON)
-        const images = [
-            { filename: 'image1.jpg', title: 'Immagine 1', description: 'Descrizione dell\'immagine 1' },
-            { filename: 'image2.jpg', title: 'Immagine 2', description: 'Descrizione dell\'immagine 2' },
-            { filename: 'image3.jpg', title: 'Immagine 3', description: 'Descrizione dell\'immagine 3' },
-            { filename: 'image4.jpg', title: 'Immagine 4', description: 'Descrizione dell\'immagine 4' },
-            { filename: 'image5.jpg', title: 'Immagine 5', description: 'Descrizione dell\'immagine 5' },
-            { filename: 'image6.jpg', title: 'Immagine 6', description: 'Descrizione dell\'immagine 6' }
-            // Aggiungi altre immagini secondo necessità
-        ];
-
+        // Array per memorizzare le immagini trovate
+        let images = [];
+        
+        // Funzione per controllare se un file è un'immagine valida
+        function isImage(filename) {
+            const extension = filename.split('.').pop().toLowerCase();
+            return imageExtensions.includes(extension);
+        }
+        
         // Inizializzazione
         document.addEventListener('DOMContentLoaded', function() {
-            loadSlideshow();
-            loadGallery();
-            showSlides(1);
+            // Carichiamo un file JSON che conterrà la lista delle immagini
+            // oppure scansioniamo la cartella direttamente
+            fetchImagesFromFolder();
         });
 
         // Funzione per caricare lo slideshow
@@ -403,22 +401,150 @@
             }
         }
 
-        // Script per scansionare automaticamente la cartella delle immagini
-        // Nota: Questo funzionerà solo con un server web, non con file:// URL
-        // Per GitHub Pages, è necessario avere un elenco predefinito o generare un file JSON
-        function scanImagesFolder() {
-            // Questo è solo uno pseudocodice, non funzionerà direttamente
-            // In un ambiente reale, utilizzeresti una soluzione lato server o un file JSON
-            fetch(imagesFolder)
-                .then(response => response.text())
-                .then(html => {
-                    // Parser per HTML directory listing
-                    // Estrai i nomi dei file immagine dal listing della directory
-                    // Questo è molto specifico del server e potrebbe non funzionare su GitHub Pages
+        // Funzione per scansionare automaticamente la cartella delle immagini
+        function fetchImagesFromFolder() {
+            // Metodo 1: Utilizzo di un file JSON che contiene l'elenco delle immagini
+            // Nel repository GitHub dovrai creare un file `images.json` che viene generato manualmente o tramite script
+            fetch('images.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('File JSON non trovato, uso metodo alternativo');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    images = data;
+                    initializeGallery();
                 })
                 .catch(error => {
-                    console.error('Errore nel caricamento delle immagini:', error);
+                    console.log('Tentativo con file JSON fallito:', error);
+                    // Metodo 2: Scansione diretta usando il caricamento di immagini
+                    scanDirectoryFromPatterns();
                 });
+        }
+        
+        // Funzione per scansionare la directory usando pattern predefiniti
+        function scanDirectoryFromPatterns() {
+            console.log('Scansione della directory usando pattern predefiniti...');
+            
+            // Lista dei possibili nomi file da verificare
+            // Questo metodo prova a caricare immagini con nomi sequenziali o comuni
+            const patterns = [
+                // Pattern numerici: img1.jpg, img2.jpg, ecc.
+                { prefix: 'img', start: 1, end: 30, extension: '.jpg' },
+                { prefix: 'image', start: 1, end: 30, extension: '.jpg' },
+                { prefix: 'photo', start: 1, end: 30, extension: '.jpg' },
+                { prefix: 'img', start: 1, end: 30, extension: '.png' },
+                { prefix: 'image', start: 1, end: 30, extension: '.png' },
+                
+                // Pattern alfanumerici: a.jpg, b.jpg, ecc.
+                { prefix: '', chars: 'abcdefghijklmnopqrstuvwxyz', extension: '.jpg' },
+                
+                // Pattern per immagini webp e gif
+                { prefix: 'img', start: 1, end: 20, extension: '.webp' },
+                { prefix: 'img', start: 1, end: 20, extension: '.gif' }
+            ];
+            
+            let foundImages = [];
+            let loadedCount = 0;
+            let totalAttempts = 0;
+            
+            // Calcola il numero totale di tentativi da fare
+            for (const pattern of patterns) {
+                if (pattern.chars) {
+                    totalAttempts += pattern.chars.length;
+                } else {
+                    totalAttempts += (pattern.end - pattern.start + 1);
+                }
+            }
+            
+            // Funzione per verificare se un'immagine esiste
+            function checkImage(src, filename) {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = function() {
+                        // Immagine trovata, aggiungiamola all'array
+                        foundImages.push({
+                            filename: filename,
+                            title: 'Immagine ' + (foundImages.length + 1),
+                            description: 'Immagine della galleria'
+                        });
+                        resolve(true);
+                    };
+                    img.onerror = function() {
+                        // Immagine non trovata
+                        resolve(false);
+                    };
+                    img.src = src;
+                });
+            }
+            
+            // Funzione per eseguire controlli in sequenza
+            async function runChecks() {
+                // Per ogni pattern
+                for (const pattern of patterns) {
+                    // Se abbiamo un pattern con caratteri
+                    if (pattern.chars) {
+                        for (let i = 0; i < pattern.chars.length; i++) {
+                            const filename = pattern.prefix + pattern.chars[i] + pattern.extension;
+                            const src = imagesFolder + filename;
+                            await checkImage(src, filename);
+                            loadedCount++;
+                            
+                            if (loadedCount === totalAttempts || foundImages.length >= 50) {
+                                finishLoading();
+                                return;
+                            }
+                        }
+                    } 
+                    // Se abbiamo un pattern numerico
+                    else {
+                        for (let i = pattern.start; i <= pattern.end; i++) {
+                            const filename = pattern.prefix + i + pattern.extension;
+                            const src = imagesFolder + filename;
+                            await checkImage(src, filename);
+                            loadedCount++;
+                            
+                            if (loadedCount === totalAttempts || foundImages.length >= 50) {
+                                finishLoading();
+                                return;
+                            }
+                        }
+                    }
+                }
+                
+                finishLoading();
+            }
+            
+            // Funzione per terminare il caricamento e inizializzare la galleria
+            function finishLoading() {
+                if (foundImages.length > 0) {
+                    console.log(`Trovate ${foundImages.length} immagini nella cartella`);
+                    images = foundImages;
+                } else {
+                    console.log('Nessuna immagine trovata, uso immagini di esempio');
+                    // Se non sono state trovate immagini, usa immagini di esempio (placeholder)
+                    for (let i = 1; i <= 6; i++) {
+                        images.push({
+                            filename: `placeholder_${i}.jpg`, 
+                            title: `Immagine ${i}`, 
+                            description: `Questa è un'immagine di esempio. Aggiungi le tue immagini nella cartella '${imagesFolder}'`
+                        });
+                    }
+                }
+                
+                initializeGallery();
+            }
+            
+            // Avvia i controlli
+            runChecks();
+        }
+        
+        // Funzione per inizializzare la galleria dopo aver caricato le immagini
+        function initializeGallery() {
+            loadSlideshow();
+            loadGallery();
+            showSlides(1);
         }
     </script>
 </body>
