@@ -2,8 +2,9 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">>
-    <title>Matrimonio Mistex</title>
+    <title>Galleria Immagini</title>
     <style>
         /* Stili generali */
         body {
@@ -276,7 +277,7 @@
 </head>
 <body>
     <header>
-        <h1>Matrimonio MisterX 22/06/2025</h1>
+        <h1>La Mia Galleria di Immagini</h1>
     </header>
 
     <div class="container">
@@ -515,8 +516,23 @@
                 })
                 .catch(error => {
                     console.log('Tentativo con file JSON fallito:', error);
-                    // Metodo 2: Scansione diretta usando il caricamento di immagini
+                        // Metodo 2: Scansione diretta usando il caricamento di immagini
                     scanDirectoryFromPatterns();
+                    
+                    // Aggiungiamo un messaggio all'utente
+                    const messageEl = document.createElement('div');
+                    messageEl.style.textAlign = 'center';
+                    messageEl.style.padding = '10px';
+                    messageEl.style.marginBottom = '20px';
+                    messageEl.style.backgroundColor = '#e0f7fa';
+                    messageEl.style.borderRadius = '5px';
+                    messageEl.innerHTML = '<p>Ricerca immagini in corso...</p>';
+                    document.querySelector('.container').prepend(messageEl);
+                    
+                    // Lo rimuoveremo quando le immagini saranno caricate
+                    window.setTimeout(() => {
+                        messageEl.remove();
+                    }, 3000);
                 });
         }
         
@@ -637,8 +653,26 @@
             runChecks();
         }
         
-        // Funzione per inizializzare la galleria dopo aver caricato le immagini
+// Funzione per inizializzare la galleria dopo aver caricato le immagini
         function initializeGallery() {
+            // Aggiungere un messaggio di caricamento completato
+            const message = document.createElement('div');
+            message.style.textAlign = 'center';
+            message.style.padding = '10px';
+            message.style.marginBottom = '20px';
+            message.style.color = 'white';
+            message.style.backgroundColor = '#2ecc71';
+            message.style.borderRadius = '5px';
+            message.innerHTML = `<p>Trovate ${images.length} immagini!</p>`;
+            document.querySelector('.container').prepend(message);
+            
+            // Rimuovere il messaggio dopo 3 secondi
+            setTimeout(() => {
+                message.style.transition = 'opacity 0.5s ease';
+                message.style.opacity = '0';
+                setTimeout(() => message.remove(), 500);
+            }, 2000);
+
             loadSlideshow();
             loadGallery();
             showSlides(1);
