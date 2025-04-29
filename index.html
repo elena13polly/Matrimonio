@@ -209,6 +209,26 @@
             cursor: pointer;
         }
         
+        /* Loader */
+        .loader-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+        }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
         /* Media queries per dispositivi mobili */
         @media (max-width: 768px) {
             .container {
@@ -277,7 +297,7 @@
 </head>
 <body>
     <header>
-        <h1>La Mia Galleria di Immagini</h1>
+        <h1>Matrimonio Mister X</h1>
     </header>
 
     <div class="container">
@@ -290,6 +310,9 @@
         <div id="slideshow" class="tab-content active">
             <div class="slideshow-container">
                 <!-- Le slide verranno caricate dinamicamente qui -->
+                <div class="loader-container">
+                    <div class="loader"></div>
+                </div>
             </div>
             <div class="dot-container">
                 <!-- I punti di navigazione verranno aggiunti qui -->
@@ -300,6 +323,9 @@
         <div id="mosaico" class="tab-content">
             <div class="gallery">
                 <!-- Le immagini del mosaico verranno caricate dinamicamente qui -->
+                <div class="loader-container">
+                    <div class="loader"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -312,8 +338,13 @@
     </div>
 
     <script>
+        // Configurazione
+        const imagesFolder = 'images/'; // Percorso della cartella immagini
+        let images = []; // Array per memorizzare le immagini
+        
         // Per gestire il touch swipe su mobile
         document.addEventListener('DOMContentLoaded', function() {
+            // Setup swipe per slideshow
             let touchstartX = 0;
             let touchendX = 0;
             
@@ -332,32 +363,62 @@
                 touchendX = e.changedTouches[0].screenX;
                 handleGesture();
             });
+            
+            // Carica direttamente le immagini dal file JSON
+            loadImagesFromJson();
         });
         
-        // Configurazione
-        const imagesFolder = 'images/'; // Percorso della cartella immagini
-        const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp']; // Estensioni supportate
-        
-        // Array per memorizzare le immagini trovate
-        let images = [];
-        
-        // Funzione per controllare se un file è un'immagine valida
-        function isImage(filename) {
-            const extension = filename.split('.').pop().toLowerCase();
-            return imageExtensions.includes(extension);
+        // Funzione per caricare le immagini direttamente dal file JSON
+        function loadImagesFromJson() {
+            // Mostra il loader
+            document.querySelectorAll('.loader-container').forEach(container => {
+                container.style.display = 'flex';
+            });
+            
+            // Carica il file JSON
+            fetch('images.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('File JSON non trovato');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Se abbiamo trovato il file JSON, inizializziamo la galleria
+                    images = data;
+                    initializeGallery();
+                })
+                .catch(error => {
+                    console.error('Errore nel caricamento delle immagini:', error);
+                    
+                    // Mostra un messaggio di errore
+                    const errorMessage = document.createElement('div');
+                    errorMessage.style.textAlign = 'center';
+                    errorMessage.style.padding = '20px';
+                    errorMessage.style.color = 'red';
+                    errorMessage.innerHTML = `
+                        <p>Non è stato possibile caricare le immagini.</p>
+                        <p>Verifica che il file images.json sia presente nella root del repository.</p>
+                    `;
+                    
+                    // Nascondi i loader
+                    document.querySelectorAll('.loader-container').forEach(container => {
+                        container.style.display = 'none';
+                    });
+                    
+                    // Aggiungi il messaggio di errore
+                    document.querySelector('.slideshow-container').appendChild(errorMessage);
+                    document.querySelector('.gallery').appendChild(errorMessage.cloneNode(true));
+                });
         }
-        
-        // Inizializzazione
-        document.addEventListener('DOMContentLoaded', function() {
-            // Carichiamo un file JSON che conterrà la lista delle immagini
-            // oppure scansioniamo la cartella direttamente
-            fetchImagesFromFolder();
-        });
 
         // Funzione per caricare lo slideshow
         function loadSlideshow() {
             const slideshowContainer = document.querySelector('.slideshow-container');
             const dotContainer = document.querySelector('.dot-container');
+            
+            // Rimuovi il loader
+            slideshowContainer.querySelector('.loader-container')?.remove();
             
             slideshowContainer.innerHTML = '';
             dotContainer.innerHTML = '';
@@ -404,6 +465,10 @@
         // Funzione per caricare il mosaico
         function loadGallery() {
             const gallery = document.querySelector('.gallery');
+            
+            // Rimuovi il loader
+            gallery.querySelector('.loader-container')?.remove();
+            
             gallery.innerHTML = '';
             
             images.forEach(image => {
@@ -413,6 +478,7 @@
                 const img = document.createElement('img');
                 img.src = imagesFolder + image.filename;
                 img.alt = image.title;
+                img.loading = 'lazy'; // Lazy loading per migliorare le prestazioni
                 img.onclick = function() { openModal(image); };
                 
                 const caption = document.createElement('div');
@@ -487,6 +553,24 @@
             
             // Disabilita lo scroll della pagina quando il modal è aperto
             document.body.style.overflow = 'hidden';
+            
+            // Aggiungi supporto per swipe su mobile nel modal
+            let touchstartX = 0;
+            let touchendX = 0;
+            
+            function handleModalGesture() {
+                if (touchendX < touchstartX - 50) closeModal(); // Swipe a sinistra per chiudere
+                if (touchendX > touchstartX + 50) closeModal(); // Swipe a destra per chiudere
+            }
+            
+            modalImg.addEventListener('touchstart', e => {
+                touchstartX = e.changedTouches[0].screenX;
+            });
+            
+            modalImg.addEventListener('touchend', e => {
+                touchendX = e.changedTouches[0].screenX;
+                handleModalGesture();
+            });
         }
         
         // Funzione per chiudere il modal
@@ -508,164 +592,10 @@
                 closeModal();
             }
         }
-
-        // Funzione per scansionare automaticamente la cartella delle immagini
-        function fetchImagesFromFolder() {
-            // Metodo 1: Utilizzo di un file JSON che contiene l'elenco delle immagini
-            // Nel repository GitHub dovrai creare un file `images.json` che viene generato manualmente o tramite script
-            fetch('images.json')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('File JSON non trovato, uso metodo alternativo');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    images = data;
-                    initializeGallery();
-                })
-                .catch(error => {
-                    console.log('Tentativo con file JSON fallito:', error);
-                    // Metodo 2: Scansione diretta usando il caricamento di immagini
-                    scanDirectoryFromPatterns();
-                    
-                    // Aggiungiamo un messaggio all'utente
-                    const messageEl = document.createElement('div');
-                    messageEl.style.textAlign = 'center';
-                    messageEl.style.padding = '10px';
-                    messageEl.style.marginBottom = '20px';
-                    messageEl.style.backgroundColor = '#e0f7fa';
-                    messageEl.style.borderRadius = '5px';
-                    messageEl.innerHTML = '<p>Ricerca immagini in corso...</p>';
-                    document.querySelector('.container').prepend(messageEl);
-                    
-                    // Lo rimuoveremo quando le immagini saranno caricate
-                    window.setTimeout(() => {
-                        messageEl.remove();
-                    }, 3000);
-                });
-        }
-        
-        // Funzione per scansionare la directory usando pattern predefiniti
-        function scanDirectoryFromPatterns() {
-            console.log('Scansione della directory usando pattern predefiniti...');
-            
-            // Lista dei possibili nomi file da verificare
-            // Questo metodo prova a caricare immagini con nomi sequenziali o comuni
-            const patterns = [
-                // Pattern numerici: img1.jpg, img2.jpg, ecc.
-                { prefix: 'img', start: 1, end: 30, extension: '.jpg' },
-                { prefix: 'image', start: 1, end: 30, extension: '.jpg' },
-                { prefix: 'photo', start: 1, end: 30, extension: '.jpg' },
-                { prefix: 'img', start: 1, end: 30, extension: '.png' },
-                { prefix: 'image', start: 1, end: 30, extension: '.png' },
-                
-                // Pattern alfanumerici: a.jpg, b.jpg, ecc.
-                { prefix: '', chars: 'abcdefghijklmnopqrstuvwxyz', extension: '.jpg' },
-                
-                // Pattern per immagini webp e gif
-                { prefix: 'img', start: 1, end: 20, extension: '.webp' },
-                { prefix: 'img', start: 1, end: 20, extension: '.gif' }
-            ];
-            
-            let foundImages = [];
-            let loadedCount = 0;
-            let totalAttempts = 0;
-            
-            // Calcola il numero totale di tentativi da fare
-            for (const pattern of patterns) {
-                if (pattern.chars) {
-                    totalAttempts += pattern.chars.length;
-                } else {
-                    totalAttempts += (pattern.end - pattern.start + 1);
-                }
-            }
-            
-            // Funzione per verificare se un'immagine esiste
-            function checkImage(src, filename) {
-                return new Promise((resolve) => {
-                    const img = new Image();
-                    img.onload = function() {
-                        // Immagine trovata, aggiungiamola all'array
-                        foundImages.push({
-                            filename: filename,
-                            title: 'Immagine ' + (foundImages.length + 1),
-                            description: 'Immagine della galleria'
-                        });
-                        resolve(true);
-                    };
-                    img.onerror = function() {
-                        // Immagine non trovata
-                        resolve(false);
-                    };
-                    img.src = src;
-                });
-            }
-            
-            // Funzione per eseguire controlli in sequenza
-            async function runChecks() {
-                // Per ogni pattern
-                for (const pattern of patterns) {
-                    // Se abbiamo un pattern con caratteri
-                    if (pattern.chars) {
-                        for (let i = 0; i < pattern.chars.length; i++) {
-                            const filename = pattern.prefix + pattern.chars[i] + pattern.extension;
-                            const src = imagesFolder + filename;
-                            await checkImage(src, filename);
-                            loadedCount++;
-                            
-                            if (loadedCount === totalAttempts || foundImages.length >= 50) {
-                                finishLoading();
-                                return;
-                            }
-                        }
-                    } 
-                    // Se abbiamo un pattern numerico
-                    else {
-                        for (let i = pattern.start; i <= pattern.end; i++) {
-                            const filename = pattern.prefix + i + pattern.extension;
-                            const src = imagesFolder + filename;
-                            await checkImage(src, filename);
-                            loadedCount++;
-                            
-                            if (loadedCount === totalAttempts || foundImages.length >= 50) {
-                                finishLoading();
-                                return;
-                            }
-                        }
-                    }
-                }
-                
-                finishLoading();
-            }
-            
-            // Funzione per terminare il caricamento e inizializzare la galleria
-            function finishLoading() {
-                if (foundImages.length > 0) {
-                    console.log(`Trovate ${foundImages.length} immagini nella cartella`);
-                    images = foundImages;
-                } else {
-                    console.log('Nessuna immagine trovata, uso immagini di esempio');
-                    // Se non sono state trovate immagini, usa immagini di esempio (placeholder)
-                    for (let i = 1; i <= 6; i++) {
-                        images.push({
-                            filename: `placeholder_${i}.jpg`, 
-                            title: `Immagine ${i}`, 
-                            description: `Questa è un'immagine di esempio. Aggiungi le tue immagini nella cartella '${imagesFolder}'`
-                        });
-                    }
-                }
-                
-                initializeGallery();
-            }
-            
-            // Avvia i controlli
-            runChecks();
-        }
         
         // Funzione per inizializzare la galleria dopo aver caricato le immagini
         function initializeGallery() {
-            // Aggiungere un messaggio di caricamento completato
+            // Aggiungere un messaggio di caricamento completato (opzionale)
             const message = document.createElement('div');
             message.style.textAlign = 'center';
             message.style.padding = '10px';
@@ -676,16 +606,22 @@
             message.innerHTML = `<p>Trovate ${images.length} immagini!</p>`;
             document.querySelector('.container').prepend(message);
             
-            // Rimuovere il messaggio dopo 3 secondi
+            // Rimuovere il messaggio dopo un breve periodo
             setTimeout(() => {
                 message.style.transition = 'opacity 0.5s ease';
                 message.style.opacity = '0';
                 setTimeout(() => message.remove(), 500);
             }, 2000);
-
+            
+            // Carica le immagini nella galleria e nello slideshow
             loadSlideshow();
             loadGallery();
             showSlides(1);
+            
+            // Nascondi i loader residui
+            document.querySelectorAll('.loader-container').forEach(container => {
+                container.style.display = 'none';
+            });
         }
     </script>
 </body>
