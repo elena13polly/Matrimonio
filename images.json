@@ -1,22 +1,52 @@
 [
   {
-    "filename": "img1.jpg",
-    "title": "Immagine 1",
-    "description": "Pollo 1"
+    "filename": "image0.jpeg",
+    "title": "young",
+    "description": "young"
+  },
+ {
+    "filename": "image1.jpeg",
+    "title": "hippie",
+    "description": "hippie"
   },
   {
-    "filename": "img2.jpg",
-    "title": "Immagine 2",
-    "description": "Pollo 2"
+    "filename": "image2.jpeg",
+    "title": "capra",
+    "description": "capra"
   },
   {
-    "filename": "img3.jpg",
-    "title": "Immagine 3",
-    "description": "Pollo 3"
+    "filename": "image3.jpeg",
+    "title": "elegant",
+    "description": "elegant"
   },
   {
-    "filename": "img4.jpg",
-    "title": "Immagine 4",
-    "description": "Pollo nudo"
+    "filename": "image4.jpeg",
+    "title": "biker",
+    "description": "biker"
+  },
+  {
+    "filename": "image5.jpeg",
+    "title": "mountain",
+    "description": "mountain"
+  },
+  {
+    "filename": "image6.jpeg",
+    "title": "dj",
+    "description": "dj"
+  },
+  {
+    "filename": "image7.jpeg",
+    "title": "ski",
+    "description": "ski"
+  },
+  {
+    "filename": "image8.jpeg",
+    "title": "sea",
+    "description": "sea"
+  },
+  {
+    "filename": "image10.jpeg",
+    "title": "abarth",
+    "description": "abarth"
   }
 ]
